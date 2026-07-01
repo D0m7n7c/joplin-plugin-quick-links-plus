@@ -71,15 +71,28 @@
 		return (clone.textContent || '').replace(/\s+/g, ' ').trim();
 	}
 
-	// Text preceding an inline anchor within its block; falls back to the whole
-	// block text and finally to the anchor id.
+	// Text preceding an inline anchor on its visual line. To match the editor's
+	// line-based label, the range starts after the last <br> before the anchor (a
+	// soft line break inside the block), or at the block start when there is none.
+	// Falls back to the whole block text and finally to the anchor id.
 	function anchorLabel(anchor) {
 		var block = anchor.closest('p,li,td,th,div,blockquote,h1,h2,h3,h4,h5,h6') || anchor.parentElement;
 		if (block) {
 			try {
 				var range = document.createRange();
-				range.setStart(block, 0);
+
+				var brs = block.querySelectorAll('br');
+				var startBr = null;
+				for (var i = 0; i < brs.length; i++) {
+					if (anchor.compareDocumentPosition(brs[i]) & Node.DOCUMENT_POSITION_PRECEDING) {
+						startBr = brs[i]; // keep the closest <br> before the anchor
+					}
+				}
+
+				if (startBr) range.setStartAfter(startBr);
+				else range.setStart(block, 0);
 				range.setEndBefore(anchor);
+
 				var before = range.toString().replace(/\s+/g, ' ').trim();
 				if (before) return before;
 			} catch (e) { /* ignore */ }
