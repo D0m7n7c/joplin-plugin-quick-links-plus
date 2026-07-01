@@ -29,7 +29,7 @@ heading slugs). The length is configurable (default 6).
 
 ### Viewer copy marks
 
-In the rendered note a small `§` mark appears next to every heading and inline
+In the rendered note a small link icon appears next to every heading and inline
 anchor. It is hidden until you hover the line (then light gray), turns dark when
 you point at it, and on click copies a Joplin link to that target and shows
 `Copied!` (duration configurable). For anchors the link text is taken from the
@@ -43,7 +43,7 @@ Found under *Options -> Quick Links Plus*:
 - **Show notebook name** - shows the notebook next to note results (`@@`) and in the section header of heading/anchor results (`@@#`). On by default.
 - **Enable heading / anchor search (`@@#`)**.
 - **Enable anchor id generator (`@@id`)**.
-- **Show copy marks (`§`) in the viewer**.
+- **Show copy marks (link icon) in the viewer**.
 
 Under Joplin's **Advanced** settings toggle (click *Show Advanced Settings* in the
 config screen):

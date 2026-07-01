@@ -335,7 +335,7 @@ async function registerSettings(): Promise<void> {
 			section: SECTION,
 			type: SettingItemType.Bool,
 			value: true,
-			label: 'Show copy marks (§) next to headings and anchors in the viewer',
+			label: 'Show copy marks (link icon) next to headings and anchors in the viewer',
 		},
 	});
 }

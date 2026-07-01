@@ -1,6 +1,6 @@
 /* viewer/anchorMark.css
  *
- * Styling for the "§" copy marks. Colors use Joplin theme variables so the mark
+ * Styling for the link copy marks. Colors use Joplin theme variables so the mark
  * adapts to light and dark themes, with sensible fallbacks.
  */
 
@@ -16,6 +16,14 @@
 	color: var(--joplin-color-faded, #b8b8b8);
 	opacity: 0;
 	transition: opacity 0.12s ease, color 0.12s ease;
+}
+
+/* The inline link icon follows the text color via currentColor. */
+.qlp-mark svg {
+	width: 0.85em;
+	height: 0.85em;
+	vertical-align: -0.1em;
+	pointer-events: none;
 }
 
 /* Light gray, visible while hovering the heading / anchor line. */

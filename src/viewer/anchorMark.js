@@ -21,7 +21,12 @@
 	'use strict';
 
 	var CONTENT_SCRIPT_ID = 'quickLinksPlusViewer';
-	var MARK_CHAR = '\u00A7'; // §
+	// Inline link icon (outline, thick stroke). Uses currentColor so it follows
+	// the same gray/dark states as the old "§" via CSS `color`.
+	var MARK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+		+ '<path d="M10 13a5 5 0 0 0 7.54 .54l3 -3a5 5 0 0 0 -7.07 -7.07l-1.72 1.71"/>'
+		+ '<path d="M14 11a5 5 0 0 0 -7.54 -.54l-3 3a5 5 0 0 0 7.07 7.07l1.71 -1.71"/>'
+		+ '</svg>';
 
 	var enabled = true;
 	var copiedDurationMs = 900;
@@ -101,7 +106,7 @@
 	function makeMark(targetId, getLabel) {
 		var span = document.createElement('span');
 		span.className = 'qlp-mark';
-		span.textContent = MARK_CHAR;
+		span.innerHTML = MARK_SVG;
 		span.setAttribute('role', 'button');
 		span.setAttribute('aria-label', 'Copy anchor link');
 		span.setAttribute('title', 'Copy anchor link');
