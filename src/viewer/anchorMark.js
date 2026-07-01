@@ -24,6 +24,7 @@
 	var MARK_CHAR = '\u00A7'; // §
 
 	var enabled = true;
+	var copiedDurationMs = 900;
 	var observer = null;
 	var scheduled = false;
 
@@ -31,7 +32,12 @@
 		try {
 			return webviewApi
 				.postMessage(CONTENT_SCRIPT_ID, { command: 'getConfig' })
-				.then(function (cfg) { enabled = !cfg || cfg.enabled !== false; })
+				.then(function (cfg) {
+					enabled = !cfg || cfg.enabled !== false;
+					if (cfg && typeof cfg.copiedDurationMs === 'number' && cfg.copiedDurationMs > 0) {
+						copiedDurationMs = cfg.copiedDurationMs;
+					}
+				})
 				.catch(function () { enabled = true; });
 		} catch (e) {
 			enabled = true;
@@ -80,14 +86,14 @@
 
 	function showCopied(span) {
 		span.classList.add('qlp-copied');
-		window.setTimeout(function () { span.classList.remove('qlp-copied'); }, 1400);
+		window.setTimeout(function () { span.classList.remove('qlp-copied'); }, copiedDurationMs);
 	}
 
 	function requestCopy(span, targetId, label) {
 		try {
 			webviewApi
 				.postMessage(CONTENT_SCRIPT_ID, { command: 'copyLink', anchor: targetId, label: label })
-				.then(function () { showCopied(span); })
+				.then(function (res) { if (res && res.ok) showCopied(span); })
 				.catch(function () { /* ignore */ });
 		} catch (e) { /* ignore */ }
 	}

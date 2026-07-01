@@ -124,7 +124,7 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 				};
 			});
 
-			if (options.length === 0) options.push(keepOpenHint('No matching heading — keep typing…'));
+			if (options.length === 0) options.push(keepOpenHint('No matches found — delete the last character'));
 			return { from: prefix.from, filter: false, options };
 		}
 
@@ -139,7 +139,7 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 				if (response.selectText) selectLinkText(view, from, String(note.title));
 			},
 		}));
-		if (options.length === 0 && rest.length > 0) options.push(keepOpenHint('No matching note — keep typing…'));
+		if (options.length === 0 && rest.length > 0) options.push(keepOpenHint('No matches found — delete the last character'));
 		return { from: prefix.from, filter: false, options };
 	};
 
