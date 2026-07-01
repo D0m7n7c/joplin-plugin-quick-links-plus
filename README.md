@@ -4,6 +4,12 @@ A reworked take on the *Quick Links* idea: link to notes, headings and anchors
 straight from the Markdown editor, generate stable anchor ids, and copy a link to
 any heading or anchor directly from the rendered note.
 
+> **About this plugin.** Quick Links Plus was developed end-to-end with
+> Anthropic's Claude Opus 4.8. There is no active human maintainer behind it — it
+> was built to solve a personal need and is shared as-is, without warranty.
+> Contributions and maintainers are very welcome: if you'd like to improve or
+> take over the project, please open an issue or pull request.
+
 > Works in the **CodeMirror 6 Markdown editor** (current Joplin). The legacy
 > CodeMirror 5 editor and the Rich Text (WYSIWYG) editor are not supported.
 
@@ -57,14 +63,6 @@ Install it via *Options -> Plugins -> Install from file*.
   very unusual characters may differ.
 - `@@#` searches note bodies via Joplin search, so only the most relevant notes
   are scanned for performance.
-
-## About this plugin
-
-Quick Links Plus was developed end-to-end with Anthropic's Claude Opus 4.8.
-There is no active human maintainer behind it — it was built to solve a personal
-need and is shared as-is, without warranty. Contributions and maintainers are
-very welcome: if you'd like to improve or take over the project, please open an
-issue or pull request.
 
 ## Credits
 
