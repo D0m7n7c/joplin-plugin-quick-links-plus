@@ -1,0 +1,6 @@
+{
+	"extraScripts": [
+		"editor/index.ts",
+		"viewer/index.ts"
+	]
+}

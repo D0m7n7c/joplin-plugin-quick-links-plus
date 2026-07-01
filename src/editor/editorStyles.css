@@ -1,0 +1,34 @@
+/* editor/editorStyles.css
+ *
+ * Styling for the Quick Links Plus completion popup. Scoped to the tooltip class
+ * set via the autocompletion `tooltipClass` option so it never leaks into other
+ * completions.
+ */
+
+.quick-links-plus-completions .qlp-note-header {
+	display: list-item;
+	list-style: none;
+	font-weight: 600;
+	opacity: 0.9;
+	padding: 5px 6px 3px 6px;
+	margin-top: 3px;
+	border-top: 1px solid rgba(127, 127, 127, 0.25);
+}
+
+.quick-links-plus-completions .qlp-note-header:first-child {
+	margin-top: 0;
+	border-top: none;
+}
+
+/* One consistent, quiet meaning for the detail column: position within the note.
+   Not italic, evenly muted, clearly separated from the target label. */
+.quick-links-plus-completions .cm-completionDetail {
+	font-style: normal;
+	opacity: 0.6;
+	margin-left: 1.2em;
+}
+
+/* Slightly indent the option rows so they read as children of their note. */
+.quick-links-plus-completions .cm-completionLabel {
+	padding-left: 0.4em;
+}
