@@ -19,8 +19,8 @@ any heading or anchor directly from the rendered note.
 
 | Trigger | What it does | Inserts |
 | --- | --- | --- |
-| `@@<text>` | Find a note by title | `[Title](:/<noteId>)` |
-| `@@#<text>` | Find a **heading or inline anchor** across all notes. Results are grouped by note (the section header shows *Note › Notebook*); each row shows the target on the left and its position within the note (the ancestor heading path, middle elided when long) on the right. Anchors are prefixed with `#`. Matches heading text, parent headings and note title. | `[Text](:/<noteId>#<anchor>)` |
+| `@@<text>` | Find a note by title. Results are sorted by title relevance (exact match, then prefix, then contains); with no text, the most recently edited notes are shown first. | `[Title](:/<noteId>)` |
+| `@@#<text>` | Find a **heading or inline anchor** across all notes. Results are grouped by note (the section header shows *Note › Notebook*) and sorted by match quality. Each row shows the target on the left and its position within the note on the right (the ancestor heading path, nearest heading first, middle elided when long). Typing a **note title** lists all of that note's targets. Anchors are prefixed with `#`. | `[Text](:/<noteId>#<anchor>)` |
 | `@@id` | Insert a fresh, note-unique anchor. The popup previews the exact element to be inserted. | `<a id="ab12cd"></a>` |
 
 Generated ids start with a letter followed by lower-case letters/digits, and are
@@ -32,19 +32,24 @@ heading slugs). The length is configurable (default 6).
 In the rendered note a small `§` mark appears next to every heading and inline
 anchor. It is hidden until you hover the line (then light gray), turns dark when
 you point at it, and on click copies a Joplin link to that target and shows
-`Copied!`. For anchors the link text is taken from the text preceding the anchor.
-Marks are hidden in print/PDF export.
+`Copied!` (duration configurable). For anchors the link text is taken from the
+text preceding the anchor. Marks are hidden in print/PDF export.
 
 ## Settings
 
 Found under *Options -> Quick Links Plus*:
 
-- **Anchor id length** - characters in `@@id` ids (default 6).
 - **Select link text after inserting** - selects the `[link text]` after insertion so you can retype it.
 - **Show notebook name** - shows the notebook next to note results (`@@`) and in the section header of heading/anchor results (`@@#`). On by default.
 - **Enable heading / anchor search (`@@#`)**.
 - **Enable anchor id generator (`@@id`)**.
 - **Show copy marks (`§`) in the viewer**.
+
+Under Joplin's **Advanced** settings toggle (click *Show Advanced Settings* in the
+config screen):
+
+- **Anchor id length** - characters in `@@id` ids (default 6).
+- **"Copied!" message duration** - how long the confirmation stays visible, in milliseconds (default 900).
 
 ## Building
 
