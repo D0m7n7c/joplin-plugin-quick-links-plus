@@ -15,6 +15,7 @@ import joplin from 'api';
 import { ContentScriptType, SettingItemType } from 'api/types';
 import { parseOutline, OutlineEntry } from './noteParser';
 import { generateUniqueAnchorId, buildAnchorHtml } from './anchorId';
+import { ParentMap, contextRing } from './notebookTree';
 
 const SECTION = 'quickLinksPlus';
 const EDITOR_CONTENT_SCRIPT_ID = 'quickLinksPlusEditor';
@@ -34,12 +35,30 @@ const OUTLINE_RESULT_LIMIT = 60;
 const OUTLINE_COLLECT_CAP = 600;
 const RECENT_NOTE_LIMIT = 15;
 const FOLDERS_REFRESH_INTERVAL = 60000;
+const CONTEXT_CAP = 2; // rings: 0 = own subtree, 1 = parent's area, 2 = far
 
 interface FolderMap { [id: string]: string; }
 let folderCache: FolderMap = {};
+let folderParent: ParentMap = {};
 
 async function setting<T>(key: string): Promise<T> {
 	return (await joplin.settings.value(key)) as T;
+}
+
+async function currentFolderId(): Promise<string> {
+	const note = await joplin.workspace.selectedNote();
+	return note ? (note.parent_id || '') : '';
+}
+
+// Match quality of a candidate text against the query: 0 exact, 1 prefix,
+// 2 contains, 3 no direct match.
+function matchTier(text: string, needle: string): number {
+	if (needle === '') return 3;
+	const t = String(text || '').toLowerCase();
+	if (t === needle) return 0;
+	if (t.startsWith(needle)) return 1;
+	if (t.includes(needle)) return 2;
+	return 3;
 }
 
 // Remove characters that have special meaning in Joplin's search syntax so a
@@ -55,16 +74,22 @@ function sanitizeSearch(raw: string): string {
 // --- data access -----------------------------------------------------------
 
 async function refreshFolderCache(): Promise<void> {
-	const folders: FolderMap = {};
-	const query: any = { fields: ['id', 'title'], page: 1 };
+	const titles: FolderMap = {};
+	const parents: ParentMap = {};
+	const query: any = { fields: ['id', 'title', 'parent_id'], page: 1 };
+	const take = (items: any[]) => items.forEach((f: any) => {
+		titles[f.id] = f.title;
+		parents[f.id] = f.parent_id || '';
+	});
 	let result = await joplin.data.get(['folders'], query);
-	result.items.forEach((f: any) => { folders[f.id] = f.title; });
+	take(result.items);
 	while (result.has_more) {
 		query.page += 1;
 		result = await joplin.data.get(['folders'], query);
-		result.items.forEach((f: any) => { folders[f.id] = f.title; });
+		take(result.items);
 	}
-	folderCache = folders;
+	folderCache = titles;
+	folderParent = parents;
 }
 
 async function searchNotesByTitle(prefix: string): Promise<any[]> {
@@ -118,13 +143,14 @@ interface OutlineItem {
 	pathParts: string[];
 }
 
-function buildOutlineItems(notes: any[], query: string): OutlineItem[] {
+function buildOutlineItems(notes: any[], query: string, curFolder: string): OutlineItem[] {
 	const needle = sanitizeSearch(query).toLowerCase();
-	const ranked: { item: OutlineItem; rank: number; order: number }[] = [];
+	const ranked: { item: OutlineItem; ring: number; rank: number; order: number }[] = [];
 	let order = 0;
 
 	for (const note of notes) {
 		const notebook = folderCache[note.parent_id] || '';
+		const ring = contextRing(folderParent, curFolder, note.parent_id || '', CONTEXT_CAP);
 		const titleMatches = needle !== '' && String(note.title || '').toLowerCase().includes(needle);
 		const outline: OutlineEntry[] = parseOutline(note.body || '');
 
@@ -156,6 +182,7 @@ function buildOutlineItems(notes: any[], query: string): OutlineItem[] {
 					linkText: entry.linkText,
 					pathParts: entry.breadcrumb,
 				},
+				ring,
 				rank,
 				order: order++,
 			});
@@ -165,9 +192,10 @@ function buildOutlineItems(notes: any[], query: string): OutlineItem[] {
 		if (ranked.length >= OUTLINE_COLLECT_CAP) break;
 	}
 
-	// Best matches first; ties keep their original (search-relevance, then
-	// document) order. This also decides which note section appears first.
-	ranked.sort((a, b) => (a.rank - b.rank) || (a.order - b.order));
+	// Context ring first (strict), then match quality, then original order. A note
+	// lives in one notebook, so all its entries share a ring and never split
+	// across the grouped sections in the editor.
+	ranked.sort((a, b) => (a.ring - b.ring) || (a.rank - b.rank) || (a.order - b.order));
 	return ranked.slice(0, OUTLINE_RESULT_LIMIT).map(r => r.item);
 }
 
@@ -180,40 +208,33 @@ async function handleEditorMessage(message: any): Promise<any> {
 		if (message.command === 'getNotes') {
 			const showNotebook = await setting<boolean>(S_SHOW_NOTEBOOK);
 			const activeNoteId = (await joplin.workspace.selectedNoteIds())[0];
+			const curFolder = await currentFolderId();
 			const q = sanitizeSearch(message.query || '').toLowerCase();
-			let notes = (await searchNotesByTitle(message.query || ''))
+			const notes = (await searchNotesByTitle(message.query || ''))
 				.filter((n: any) => n.id !== activeNoteId);
 
-			// Sort by title relevance: exact, then prefix, then contains, then the
-			// rest; ties by shorter title, then more recently updated. Empty query
-			// keeps the "recently updated first" order from the query.
-			if (q !== '') {
-				const rankOf = (title: string): number => {
-					const t = String(title || '').toLowerCase();
-					if (t === q) return 0;
-					if (t.startsWith(q)) return 1;
-					if (t.includes(q)) return 2;
-					return 3;
-				};
-				notes = notes
-					.map((n: any, i: number) => ({ n, i }))
-					.sort((a: any, b: any) =>
-						rankOf(a.n.title) - rankOf(b.n.title)
-						|| String(a.n.title || '').length - String(b.n.title || '').length
-						|| (b.n.updated_time || 0) - (a.n.updated_time || 0)
-						|| a.i - b.i)
-					.map((x: any) => x.n);
-			}
+			// Context ring first (strict), then title relevance (exact, prefix,
+			// contains), then more recently updated. Empty query -> ring, then the
+			// "recently updated first" order carried by the index.
+			const sorted = notes
+				.map((n: any, i: number) => ({ n, i, ring: contextRing(folderParent, curFolder, n.parent_id || '', CONTEXT_CAP) }))
+				.sort((a: any, b: any) =>
+					a.ring - b.ring
+					|| matchTier(a.n.title, q) - matchTier(b.n.title, q)
+					|| (b.n.updated_time || 0) - (a.n.updated_time || 0)
+					|| a.i - b.i)
+				.map((x: any) => x.n);
 
-			const result = notes.map((n: any) => ({ id: n.id, title: n.title, folder: folderCache[n.parent_id] }));
+			const result = sorted.map((n: any) => ({ id: n.id, title: n.title, folder: folderCache[n.parent_id] }));
 			return { notes: result, selectText, showNotebook };
 		}
 
 		if (message.command === 'getHeadings') {
 			if (!(await setting<boolean>(S_ENABLE_HEADINGS))) return { disabled: true };
 			const showNotebook = await setting<boolean>(S_SHOW_NOTEBOOK);
+			const curFolder = await currentFolderId();
 			const notes = await notesForOutline(message.query || '');
-			return { items: buildOutlineItems(notes, message.query || ''), selectText, showNotebook };
+			return { items: buildOutlineItems(notes, message.query || '', curFolder), selectText, showNotebook };
 		}
 
 		if (message.command === 'generateAnchor') {

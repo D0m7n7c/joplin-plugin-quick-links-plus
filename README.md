@@ -19,8 +19,8 @@ any heading or anchor directly from the rendered note.
 
 | Trigger | What it does | Inserts |
 | --- | --- | --- |
-| `@@<text>` | Find a note by title. Results are sorted by title relevance (exact match, then prefix, then contains); with no text, the most recently edited notes are shown first. | `[Title](:/<noteId>)` |
-| `@@#<text>` | Find a **heading or inline anchor** across all notes. Results are grouped by note (the section header shows *Note › Notebook*) and sorted by match quality. Each row shows the target on the left and its position within the note on the right (the ancestor heading path, nearest heading first, middle elided when long). Typing a **note title** lists all of that note's targets. Anchors are prefixed with `#`. | `[Text](:/<noteId>#<anchor>)` |
+| `@@<text>` | Find a note by title. Results are sorted by **notebook context** first (notes in or near the current note's notebook rank higher), then by title relevance (exact, prefix, contains), then recency. | `[Title](:/<noteId>)` |
+| `@@#<text>` | Find a **heading or inline anchor** across all notes. Results are grouped by note (header shows *Note › Notebook*) and sorted by **notebook context** first (nearest notebooks first), then match quality. Each row shows the target on the left and its position within the note on the right (ancestor path, nearest heading first, middle elided). Typing a **note title** lists all of that note's targets. Anchors are prefixed with `#`. | `[Text](:/<noteId>#<anchor>)` |
 | `@@id` | Insert a fresh, note-unique anchor. The popup previews the exact element to be inserted. | `<a id="ab12cd"></a>` |
 
 Generated ids start with a letter followed by lower-case letters/digits, and are
@@ -34,6 +34,14 @@ anchor. It is hidden until you hover the line (then light gray), turns dark when
 you point at it, and on click copies a Joplin link to that target and shows
 `Copied!` (duration configurable). For anchors the link text is taken from the
 text preceding the anchor. Marks are hidden in print/PDF export.
+
+## Sorting (context bias)
+
+Suggestions are ranked by how close a note's notebook is to the notebook of the
+note you're editing: the current notebook's own subtree first, then its parent's
+area, then everything else. Within each tier, exact matches rank above prefix and
+contains matches. Context takes priority, so a match in a nearby notebook ranks
+above one further away.
 
 ## Settings
 
