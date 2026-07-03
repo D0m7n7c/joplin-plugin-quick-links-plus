@@ -319,7 +319,7 @@ async function registerSettings(): Promise<void> {
 			step: 100,
 			advanced: true,
 			label: "'Copied!' message duration (ms)",
-			description: 'How long the "Copied!" confirmation stays visible after clicking a § mark.',
+			description: 'How long the "Copied!" confirmation stays visible after clicking the chain link icon.',
 		},
 		[S_SELECT_TEXT]: {
 			public: true,
@@ -356,7 +356,7 @@ async function registerSettings(): Promise<void> {
 			section: SECTION,
 			type: SettingItemType.Bool,
 			value: true,
-			label: 'Show copy marks (link icon) next to headings and anchors in the viewer',
+			label: 'Show copy marks (chain link icon) next to headings and anchors in the viewer',
 		},
 	});
 }
