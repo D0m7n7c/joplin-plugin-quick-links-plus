@@ -10,6 +10,7 @@
 
 import type * as CodeMirrorAutocompleteType from '@codemirror/autocomplete';
 import type * as CodeMirrorStateType from '@codemirror/state';
+import type * as CodeMirrorViewType from '@codemirror/view';
 
 import type { CompletionContext, CompletionResult, Completion } from '@codemirror/autocomplete';
 import type { EditorView } from '@codemirror/view';
@@ -18,9 +19,10 @@ import type { Extension } from '@codemirror/state';
 import { PluginContext } from './types';
 
 export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirror: any) {
-	const { autocompletion, insertCompletionText } =
+	const { autocompletion, insertCompletionText, acceptCompletion } =
 		require('@codemirror/autocomplete') as typeof CodeMirrorAutocompleteType;
-	const { EditorSelection } = require('@codemirror/state') as typeof CodeMirrorStateType;
+	const { EditorSelection, Prec } = require('@codemirror/state') as typeof CodeMirrorStateType;
+	const { keymap } = require('@codemirror/view') as typeof CodeMirrorViewType;
 
 	const insertText = (view: EditorView, text: string, from: number, to: number) => {
 		view.dispatch(insertCompletionText(view.state, text, from, to));
@@ -151,8 +153,17 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 		extension = autocompletion({ override: [complete] });
 	}
 
+	// Tab accepts the highlighted suggestion, exactly like Enter. acceptCompletion
+	// only acts while the popup is open; when it's closed it returns false and Tab
+	// falls through to its normal behaviour (indentation). Highest precedence so it
+	// wins over the editor's default Tab binding while the popup is open.
+	const acceptOnTab = Prec.highest(keymap.of([
+		{ key: 'Tab', run: acceptCompletion },
+	]));
+
 	CodeMirror.addExtension([
 		extension,
 		autocompletion({ tooltipClass: () => 'quick-links-plus-completions' }),
+		acceptOnTab,
 	]);
 }
