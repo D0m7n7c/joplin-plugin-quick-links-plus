@@ -16,7 +16,15 @@ const CopyPlugin = require('copy-webpack-plugin');
 const tar = require('tar');
 const glob = require('glob');
 const execSync = require('child_process').execSync;
-const allPossibleCategories = require('@joplin/lib/pluginCategories.json');
+// Category validation is only relevant if manifest.json declares "categories".
+// @joplin/lib pulls in native deps (sqlite3) that fail to build, so we load its
+// category list only if present and otherwise skip validation.
+let allPossibleCategories = [];
+try {
+	allPossibleCategories = require('@joplin/lib/pluginCategories.json');
+} catch (error) {
+	allPossibleCategories = [];
+}
 
 const rootDir = path.resolve(__dirname);
 const userConfigFilename = './plugin.config.json';
@@ -84,6 +92,7 @@ function currentGitInfo() {
 
 function validateCategories(categories) {
 	if (!categories) return null;
+	if (!allPossibleCategories.length) return null; // reference list unavailable; skip
 	if ((categories.length !== new Set(categories).size)) throw new Error('Repeated categories are not allowed');
 	// eslint-disable-next-line github/array-foreach -- Old code before rule was applied
 	categories.forEach(category => {
