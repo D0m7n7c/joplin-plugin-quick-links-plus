@@ -24,6 +24,10 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 	const { EditorSelection, Prec } = require('@codemirror/state') as typeof CodeMirrorStateType;
 	const { keymap } = require('@codemirror/view') as typeof CodeMirrorViewType;
 
+	// Set for the duration of a Shift+Tab / Shift+Enter accept so the option's
+	// apply knows to also select the inserted "[link text]".
+	let selectRequested = false;
+
 	const insertText = (view: EditorView, text: string, from: number, to: number) => {
 		view.dispatch(insertCompletionText(view.state, text, from, to));
 	};
@@ -121,7 +125,7 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 					apply: (view: EditorView, _c: Completion, from: number, to: number) => {
 						const link = `[${item.linkText}](:/${item.noteId}#${item.anchor})`;
 						insertText(view, link, from, to);
-						if (response.selectText) selectLinkText(view, from, String(item.linkText));
+						if (selectRequested) selectLinkText(view, from, String(item.linkText));
 					},
 				};
 			});
@@ -138,7 +142,7 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 			apply: (view: EditorView, _c: Completion, from: number, to: number) => {
 				const link = `[${note.title}](:/${note.id})`;
 				insertText(view, link, from, to);
-				if (response.selectText) selectLinkText(view, from, String(note.title));
+				if (selectRequested) selectLinkText(view, from, String(note.title));
 			},
 		}));
 		if (options.length === 0 && rest.length > 0) options.push(keepOpenHint('No matches found — delete the last character'));
@@ -153,17 +157,31 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 		extension = autocompletion({ override: [complete] });
 	}
 
-	// Tab accepts the highlighted suggestion, exactly like Enter. acceptCompletion
-	// only acts while the popup is open; when it's closed it returns false and Tab
-	// falls through to its normal behaviour (indentation). Highest precedence so it
-	// wins over the editor's default Tab binding while the popup is open.
-	const acceptOnTab = Prec.highest(keymap.of([
+	// Tab accepts the highlighted suggestion, exactly like Enter. Shift+Tab and
+	// Shift+Enter accept it too, but additionally select the "[link text]" so it
+	// can be typed over immediately. acceptCompletion runs the option's apply
+	// synchronously, so a flag set around it tells apply whether to select; the
+	// flag is read inside the apply functions above. All bindings only act while
+	// the popup is open (acceptCompletion returns false otherwise) and fall
+	// through to the editor's normal Tab / Enter behaviour when it is closed.
+	const acceptAndSelect = (view: EditorView): boolean => {
+		selectRequested = true;
+		try {
+			return acceptCompletion(view);
+		} finally {
+			selectRequested = false;
+		}
+	};
+
+	const completionKeys = Prec.highest(keymap.of([
 		{ key: 'Tab', run: acceptCompletion },
+		{ key: 'Shift-Tab', run: acceptAndSelect },
+		{ key: 'Shift-Enter', run: acceptAndSelect },
 	]));
 
 	CodeMirror.addExtension([
 		extension,
 		autocompletion({ tooltipClass: () => 'quick-links-plus-completions' }),
-		acceptOnTab,
+		completionKeys,
 	]);
 }

@@ -23,7 +23,9 @@ any heading or anchor directly from the rendered note.
 | `@@#<text>` | Find a **heading or inline anchor** across all notes. Results are grouped by note (header shows *Note › Notebook*) and sorted by **notebook context** first (nearest notebooks first), then match quality. Each row shows the target on the left and its position within the note on the right (ancestor path, nearest heading first, middle elided). Typing a **note title** lists all of that note's targets. Anchors are prefixed with `#`. | `[Text](:/<noteId>#<anchor>)` |
 | `@@id` | Insert a fresh, note-unique anchor. The popup previews the exact element to be inserted. | `<a id="ab12cd"></a>` |
 
-Press Tab or Enter to accept the highlighted suggestion.
+Press **Tab** or **Enter** to accept the highlighted suggestion. Press
+**Shift+Enter** or **Shift+Tab** to accept it and also select the visible
+`[link text]`, so you can immediately type your own wording over it.
 
 Generated ids start with a letter followed by lower-case letters/digits, and are
 checked for uniqueness against the current note (including unsaved edits and
@@ -49,7 +51,6 @@ above one further away.
 
 Found under *Options -> Quick Links Plus*:
 
-- **Select link text after inserting** - selects the `[link text]` after insertion so you can retype it.
 - **Show notebook name** - shows the notebook next to note results (`@@`) and in the section header of heading/anchor results (`@@#`). On by default.
 - **Enable heading / anchor search (`@@#`)**.
 - **Enable anchor id generator (`@@id`)**.

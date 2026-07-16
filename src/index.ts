@@ -22,7 +22,6 @@ const EDITOR_CONTENT_SCRIPT_ID = 'quickLinksPlusEditor';
 const VIEWER_CONTENT_SCRIPT_ID = 'quickLinksPlusViewer';
 
 const S_ID_LENGTH = 'idLength';
-const S_SELECT_TEXT = 'selectText';
 const S_SHOW_NOTEBOOK = 'showNotebook';
 const S_ENABLE_HEADINGS = 'enableHeadingSearch';
 const S_ENABLE_ANCHOR_GEN = 'enableAnchorGenerator';
@@ -203,8 +202,6 @@ function buildOutlineItems(notes: any[], query: string, curFolder: string): Outl
 
 async function handleEditorMessage(message: any): Promise<any> {
 	try {
-		const selectText = await setting<boolean>(S_SELECT_TEXT);
-
 		if (message.command === 'getNotes') {
 			const showNotebook = await setting<boolean>(S_SHOW_NOTEBOOK);
 			const activeNoteId = (await joplin.workspace.selectedNoteIds())[0];
@@ -226,7 +223,7 @@ async function handleEditorMessage(message: any): Promise<any> {
 				.map((x: any) => x.n);
 
 			const result = sorted.map((n: any) => ({ id: n.id, title: n.title, folder: folderCache[n.parent_id] }));
-			return { notes: result, selectText, showNotebook };
+			return { notes: result, showNotebook };
 		}
 
 		if (message.command === 'getHeadings') {
@@ -234,7 +231,7 @@ async function handleEditorMessage(message: any): Promise<any> {
 			const showNotebook = await setting<boolean>(S_SHOW_NOTEBOOK);
 			const curFolder = await currentFolderId();
 			const notes = await notesForOutline(message.query || '');
-			return { items: buildOutlineItems(notes, message.query || '', curFolder), selectText, showNotebook };
+			return { items: buildOutlineItems(notes, message.query || '', curFolder), showNotebook };
 		}
 
 		if (message.command === 'generateAnchor') {
@@ -320,14 +317,6 @@ async function registerSettings(): Promise<void> {
 			advanced: true,
 			label: "'Copied!' message duration (ms)",
 			description: 'How long the "Copied!" confirmation stays visible after clicking the chain link icon.',
-		},
-		[S_SELECT_TEXT]: {
-			public: true,
-			section: SECTION,
-			type: SettingItemType.Bool,
-			value: false,
-			label: 'Select link text after inserting',
-			description: 'After inserting a link, select the visible link text (inside the square brackets) so you can immediately type your own wording.',
 		},
 		[S_SHOW_NOTEBOOK]: {
 			public: true,
