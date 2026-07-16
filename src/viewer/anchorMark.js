@@ -102,7 +102,28 @@
 		return anchor.id;
 	}
 
+	// The "Copied!" chip uses a fixed blue, with a lighter shade on dark themes.
+	// The theme is detected by measuring the rendered text color of the mark: light
+	// text means a dark theme. No CSS variables, no link probing — just the two
+	// blue pairs, so the chip looks the same everywhere and can't break.
+	function isDarkTheme(span) {
+		var m = String(window.getComputedStyle(span).color).match(/(\d+)\D+(\d+)\D+(\d+)/);
+		if (!m) return false;
+		var brightness = (Number(m[1]) * 299 + Number(m[2]) * 587 + Number(m[3]) * 114) / 1000;
+		return brightness > 127; // light text -> dark theme
+	}
+
 	function showCopied(span) {
+		try {
+			if (isDarkTheme(span)) {
+				span.style.setProperty('--qlp-chip-bg', '#7d9de7');
+				span.style.setProperty('--qlp-chip-fg', '#1e1f22');
+			} else {
+				span.style.setProperty('--qlp-chip-bg', '#3c67d9');
+				span.style.setProperty('--qlp-chip-fg', '#ffffff');
+			}
+		} catch (e) { /* leave the CSS defaults in place */ }
+
 		span.classList.add('qlp-copied');
 		window.setTimeout(function () { span.classList.remove('qlp-copied'); }, copiedDurationMs);
 	}

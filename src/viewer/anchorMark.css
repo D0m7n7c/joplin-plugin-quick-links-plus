@@ -1,7 +1,11 @@
 /* viewer/anchorMark.css
  *
- * Styling for the link copy marks. Colors use Joplin theme variables so the mark
- * adapts to light and dark themes, with sensible fallbacks.
+ * The mark inherits the line's text color, so it is gray at rest and full
+ * black (light theme) or white (dark theme) on hover — no theme detection.
+ *
+ * The "Copied!" chip is a fixed blue: #3C67D9 on light themes, #7D9DE7 on dark
+ * ones. anchorMark.js picks the pair by measuring the rendered text color; the
+ * values below are the light-theme defaults, used only if that script fails.
  */
 
 .qlp-mark {
@@ -13,12 +17,12 @@
 	cursor: pointer;
 	user-select: none;
 	position: relative;
-	color: var(--joplin-color-faded, #b8b8b8);
+
+	color: inherit;
 	opacity: 0;
-	transition: opacity 0.12s ease, color 0.12s ease;
+	transition: opacity 0.12s ease;
 }
 
-/* The inline link icon follows the text color via currentColor. */
 .qlp-mark svg {
 	width: 0.85em;
 	height: 0.85em;
@@ -26,21 +30,20 @@
 	pointer-events: none;
 }
 
-/* Light gray, visible while hovering the heading / anchor line. */
+/* Hovering the heading / anchor line: gray in both themes. */
 .qlp-host:hover .qlp-mark {
-	opacity: 1;
+	opacity: 0.4;
 }
 
-/* Dark when the pointer is over the mark itself. */
+/* Pointer over the mark itself: full text color (black / white). */
 .qlp-mark:hover,
 .qlp-host:hover .qlp-mark:hover {
-	color: var(--joplin-color, #000);
+	opacity: 1;
 }
 
 /* State right after a successful copy. */
 .qlp-mark.qlp-copied {
 	opacity: 1;
-	color: var(--joplin-color, #000);
 }
 
 .qlp-mark.qlp-copied::after {
@@ -49,15 +52,17 @@
 	left: 100%;
 	top: 50%;
 	transform: translateY(-50%);
-	margin-left: 0.4em;
-	padding: 0.1em 0.45em;
+	margin-left: 0.45em;
+	padding: 0.15em 0.5em;
 	font-size: 0.72em;
-	line-height: 1.4;
+	font-weight: 400;
+	line-height: 1.5;
 	white-space: nowrap;
-	border-radius: 3px;
+	border-radius: 4px;
 	pointer-events: none;
-	color: var(--joplin-background-color, #fff);
-	background: var(--joplin-color, #333);
+
+	color: var(--qlp-chip-fg, #ffffff);
+	background: var(--qlp-chip-bg, #3c67d9);
 }
 
 @media print {
