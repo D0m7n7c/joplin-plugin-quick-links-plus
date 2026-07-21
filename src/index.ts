@@ -13,7 +13,7 @@
 
 import joplin from 'api';
 import { ContentScriptType, SettingItemType } from 'api/types';
-import { parseOutline, OutlineEntry } from './noteParser';
+import { parseOutline, matchWindow, OutlineEntry } from './noteParser';
 import { generateUniqueAnchorId, buildAnchorHtml } from './anchorId';
 import { ParentMap, contextRing } from './notebookTree';
 
@@ -154,8 +154,11 @@ function buildOutlineItems(notes: any[], query: string, curFolder: string): Outl
 		const outline: OutlineEntry[] = parseOutline(note.body || '');
 
 		for (const entry of outline) {
-			const textLower = entry.text.toLowerCase();
-			const inText = needle !== '' && textLower.includes(needle);
+			// Match against the FULL text (searchText), so a long anchor is found by
+			// its beginning too, not only by the capped end that gets inserted.
+			const searchLower = entry.searchText.toLowerCase();
+			const matchIndex = needle !== '' ? searchLower.indexOf(needle) : -1;
+			const inText = matchIndex >= 0;
 			const inCrumb = needle !== '' && entry.breadcrumb.some(b => b.toLowerCase().includes(needle));
 
 			// Include an entry when: no query, the entry (or its path) matches, or
@@ -164,11 +167,17 @@ function buildOutlineItems(notes: any[], query: string, curFolder: string): Outl
 
 			let rank: number;
 			if (needle === '') rank = 5;
-			else if (textLower === needle) rank = 0;      // exact heading/anchor text
-			else if (textLower.startsWith(needle)) rank = 1; // prefix
+			else if (searchLower === needle) rank = 0;    // exact heading/anchor text
+			else if (matchIndex === 0) rank = 1;          // prefix
 			else if (inText) rank = 2;                    // contains
 			else if (inCrumb) rank = 3;                   // matched via a parent heading
 			else rank = 4;                                // matched only via note title
+
+			// Display like a search snippet: the typed match is always visible, with
+			// context and ellipses around it. Without a text match, the default
+			// (end-capped) label is shown. The INSERTED linkText stays the stable
+			// end-cap regardless of how the entry was found.
+			const displayText = inText ? matchWindow(entry.searchText, matchIndex, needle.length) : entry.text;
 
 			ranked.push({
 				item: {
@@ -176,7 +185,7 @@ function buildOutlineItems(notes: any[], query: string, curFolder: string): Outl
 					noteTitle: note.title,
 					notebook,
 					kind: entry.kind,
-					text: entry.text,
+					text: displayText,
 					anchor: entry.anchor,
 					linkText: entry.linkText,
 					pathParts: entry.breadcrumb,

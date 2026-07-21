@@ -32,3 +32,44 @@
 .quick-links-plus-completions .cm-completionLabel {
 	padding-left: 0.4em;
 }
+
+/* Popup option layout.
+ *
+ * Each option is a flex row that wraps: when label and path fit side by side
+ * they stay on one line; otherwise the grey path moves onto its own second
+ * line. A "↳" before the path marks it as belonging to the label above. The
+ * empty CodeMirror icon column is hidden and label padding and path margin
+ * share the same 1em, so the label text and the wrapped "↳" start at the same
+ * x position. The path clamps its own width (min-width: 0 + calc) so its
+ * ellipsis fires before the popup edge would clip it. */
+.quick-links-plus-completions .cm-completionIcon {
+	display: none;
+}
+
+.quick-links-plus-completions li[role="option"] {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	overflow: hidden;
+}
+
+.quick-links-plus-completions li[role="option"] .cm-completionLabel {
+	padding-left: 1em;
+}
+
+.quick-links-plus-completions li[role="option"] .cm-completionDetail {
+	flex-shrink: 0;
+	min-width: 0;
+	margin-left: 1em;
+	max-width: calc(100% - 1em);
+	box-sizing: border-box;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.quick-links-plus-completions li[role="option"] .cm-completionDetail::before {
+	content: '\21B3'; /* ↳ */
+	margin-right: 1.1em;
+	opacity: 0.6;
+}
