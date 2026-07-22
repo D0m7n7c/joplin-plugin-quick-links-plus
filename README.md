@@ -20,7 +20,7 @@ any heading or anchor directly from the rendered note.
 | Trigger | What it does | Inserts |
 | --- | --- | --- |
 | `@@<text>` | Find a note by title. Results are sorted by **notebook context** first (notes in or near the current note's notebook rank higher), then by title relevance (exact, prefix, contains), then recency. | `[Title](:/<noteId>)` |
-| `@@#<text>` | Find a **heading or inline anchor** across all notes. Results are grouped by note (header shows *Note › Notebook*) and sorted by **notebook context** first (nearest notebooks first), then match quality. Each row shows the target on the left and its position within the note on the right (ancestor path, nearest heading first, middle elided). Typing a **note title** lists all of that note's targets. Anchors are prefixed with `#`. | `[Text](:/<noteId>#<anchor>)` |
+| `@@#<text>` | Find a **heading or inline anchor** across all notes. Matching runs over the text before an anchor until a line break, so any part of it finds the anchor, and each row shows an excerpt around your match — then the note's path after a `↳`, on its own indented line when it doesn't fit. Typing a **note title** or **heading** surfaces everything nested under it. Results are grouped by note (*Note › Notebook*) and sorted by **notebook context** (nearest notebooks first), then match quality. Anchors are prefixed with `#`. | `[Text](:/<noteId>#<anchor>)` |
 | `@@id` | Insert a fresh, note-unique anchor. The popup previews the exact element to be inserted. | `<a id="ab12cd"></a>` |
 
 Press **Tab** or **Enter** to accept the highlighted suggestion. Press
