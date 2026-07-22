@@ -28,7 +28,10 @@ export interface OutlineEntry {
 }
 
 // ATX heading, e.g. "## Title" with optional trailing hashes.
-const HEADING_RE = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
+// Up to three leading spaces are allowed (CommonMark, and what Joplin renders
+// as a heading). Four or more spaces — or a leading tab — make it an indented
+// code block, so it is deliberately NOT matched here, mirroring the viewer.
+const HEADING_RE = /^ {0,3}(#{1,6})\s+(.*?)\s*#*\s*$/;
 // Fenced code block delimiter.
 const FENCE_RE = /^(```|~~~)/;
 // Inline anchor such as <a id="abc"></a> or <a name="abc">.

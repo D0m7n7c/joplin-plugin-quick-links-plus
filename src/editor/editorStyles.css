@@ -70,6 +70,6 @@
 
 .quick-links-plus-completions li[role="option"] .cm-completionDetail::before {
 	content: '\21B3'; /* ↳ */
-	margin-right: 1.1em;
+	margin-right: 0.5em;
 	opacity: 0.6;
 }
