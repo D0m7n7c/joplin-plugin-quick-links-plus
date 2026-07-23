@@ -19,9 +19,16 @@ any heading or anchor directly from the rendered note.
 
 | Trigger | What it does | Inserts |
 | --- | --- | --- |
-| `@@<text>` | Find a note by title. Results are sorted by **notebook context** first (notes in or near the current note's notebook rank higher), then by title relevance (exact, prefix, contains), then recency. | `[Title](:/<noteId>)` |
-| `@@#<text>` | Find a **heading or inline anchor** across all notes. Matching runs over the text before an anchor until a line break, so any part of it finds the anchor, and each row shows an excerpt around your match — then the note's path after a `↳`, on its own indented line when it doesn't fit. Typing a **note title** or **heading** surfaces everything nested under it. Results are grouped by note (*Note › Notebook*) and sorted by **notebook context** (nearest notebooks first), then match quality. Anchors are prefixed with `#`. | `[Text](:/<noteId>#<anchor>)` |
+| `@@<text>` | Find a **note by title**, ranked by title relevance (exact, prefix, contains) and then recency. | `[Title](:/<noteId>)` |
+| `@@#<text>` | Find a **heading or inline anchor** across all notes. For anchors the query is matched against the text before the anchor up to the preceding line break, so any part of it finds the anchor. Each row shows an excerpt around your match. Results are grouped by note (*Note › Notebook*), anchors are prefixed with `#`. | `[Text](:/<noteId>#<anchor>)` |
 | `@@id` | Insert a fresh, note-unique anchor. The popup previews the exact element to be inserted. | `<a id="ab12cd"></a>` |
+
+Both searches order their results by **notebook context** first — notes in or near
+the current note's notebook rank higher — before applying the ranking above.
+
+A trailing slash lists what sits inside what you named: `@@<note title>/`
+shows that note's headings and anchors, `@@#<heading>/` shows the sub-headings
+and anchors nested under that heading. Both insert an anchor link.
 
 Press **Tab** or **Enter** to accept the highlighted suggestion. Press
 **Shift+Enter** or **Shift+Tab** to accept it and also select the visible

@@ -142,8 +142,19 @@ interface OutlineItem {
 	pathParts: string[];
 }
 
-function buildOutlineItems(notes: any[], query: string, curFolder: string): OutlineItem[] {
+// How an entry qualifies for the result list:
+//   'name'   — "@@#text": the entry's own heading/anchor text matches.
+//   'under'  — "@@#text/": the entry sits below a heading whose name matches.
+//   'inNote' — "@@text/": the entry sits in a note whose title matches.
+// The trailing slash means "go into what I just named", so the two deeper modes
+// are only ever reached deliberately and cannot flood a plain name search.
+type OutlineMode = 'name' | 'under' | 'inNote';
+
+function buildOutlineItems(notes: any[], query: string, curFolder: string, mode: OutlineMode = 'name'): OutlineItem[] {
 	const needle = sanitizeSearch(query).toLowerCase();
+	// Without a query there is nothing to go "into", so the deeper modes fall
+	// back to the plain listing rather than returning nothing.
+	const effectiveMode: OutlineMode = needle === '' ? 'name' : mode;
 	const ranked: { item: OutlineItem; ring: number; rank: number; order: number }[] = [];
 	let order = 0;
 
@@ -151,6 +162,9 @@ function buildOutlineItems(notes: any[], query: string, curFolder: string): Outl
 		const notebook = folderCache[note.parent_id] || '';
 		const ring = contextRing(folderParent, curFolder, note.parent_id || '', CONTEXT_CAP);
 		const titleMatches = needle !== '' && String(note.title || '').toLowerCase().includes(needle);
+		// "@@text/" targets the contents of matching notes, so notes whose title
+		// does not match contribute nothing at all.
+		if (effectiveMode === 'inNote' && !titleMatches) continue;
 		const outline: OutlineEntry[] = parseOutline(note.body || '');
 
 		for (const entry of outline) {
@@ -161,17 +175,20 @@ function buildOutlineItems(notes: any[], query: string, curFolder: string): Outl
 			const inText = matchIndex >= 0;
 			const inCrumb = needle !== '' && entry.breadcrumb.some(b => b.toLowerCase().includes(needle));
 
-			// Include an entry when: no query, the entry (or its path) matches, or
-			// the note title matches (then show all of that note's targets).
-			if (needle !== '' && !inText && !inCrumb && !titleMatches) continue;
+			if (needle !== '') {
+				// A plain name search shows only entries that carry the query in
+				// their own text; ancestors and note titles no longer pull in
+				// unrelated targets. The deeper modes invert that deliberately.
+				if (effectiveMode === 'name' && !inText) continue;
+				if (effectiveMode === 'under' && !inCrumb) continue;
+			}
 
 			let rank: number;
 			if (needle === '') rank = 5;
+			else if (effectiveMode !== 'name') rank = 4;  // deeper modes: document order
 			else if (searchLower === needle) rank = 0;    // exact heading/anchor text
 			else if (matchIndex === 0) rank = 1;          // prefix
-			else if (inText) rank = 2;                    // contains
-			else if (inCrumb) rank = 3;                   // matched via a parent heading
-			else rank = 4;                                // matched only via note title
+			else rank = 2;                                // contains
 
 			// Display like a search snippet: the typed match is always visible, with
 			// context and ellipses around it. Without a text match, the default
@@ -204,7 +221,8 @@ function buildOutlineItems(notes: any[], query: string, curFolder: string): Outl
 	// lives in one notebook, so all its entries share a ring and never split
 	// across the grouped sections in the editor.
 	ranked.sort((a, b) => (a.ring - b.ring) || (a.rank - b.rank) || (a.order - b.order));
-	return ranked.slice(0, OUTLINE_RESULT_LIMIT).map(r => r.item);
+	const items = ranked.slice(0, OUTLINE_RESULT_LIMIT).map(r => r.item);
+	return items;
 }
 
 // --- message handlers ------------------------------------------------------
@@ -239,8 +257,10 @@ async function handleEditorMessage(message: any): Promise<any> {
 			if (!(await setting<boolean>(S_ENABLE_HEADINGS))) return { disabled: true };
 			const showNotebook = await setting<boolean>(S_SHOW_NOTEBOOK);
 			const curFolder = await currentFolderId();
+			const mode: OutlineMode =
+				message.mode === 'under' || message.mode === 'inNote' ? message.mode : 'name';
 			const notes = await notesForOutline(message.query || '');
-			return { items: buildOutlineItems(notes, message.query || '', curFolder), showNotebook };
+			return { items: buildOutlineItems(notes, message.query || '', curFolder, mode), showNotebook };
 		}
 
 		if (message.command === 'generateAnchor') {

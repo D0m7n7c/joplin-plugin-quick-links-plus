@@ -78,12 +78,9 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 			};
 		}
 
-		// ----- @@# : link to a heading or inline anchor across all notes -------
-		if (rest.startsWith('#')) {
-			const query = rest.substring(1);
-			const response = await pluginContext.postMessage({ command: 'getHeadings', query });
-			if (!response || response.disabled) return null;
-
+		// Turns outline results (headings and anchors) into completion options.
+		// Shared by the plain "@@#" search and both trailing-slash modes.
+		const outlineOptions = (response: any): Completion[] => {
 			const items: any[] = response.items || [];
 			const sectionByNote = new Map<string, any>();
 			let nextRank = 0;
@@ -130,8 +127,49 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 				};
 			});
 
-			if (options.length === 0) options.push(keepOpenHint('No matches found — delete the last character'));
+			return options;
+		};
+
+		// ----- @@# : link to a heading or inline anchor across all notes -------
+		// A trailing slash means "go into what I just named": "@@#Chapter/" lists
+		// what is nested under a heading called "Chapter" instead of matching the
+		// heading itself.
+		if (rest.startsWith('#')) {
+			const raw = rest.substring(1);
+			const deeper = raw.endsWith('/') && raw.length > 1;
+			const query = deeper ? raw.slice(0, -1) : raw;
+			const response = await pluginContext.postMessage({
+				command: 'getHeadings',
+				query,
+				mode: deeper ? 'under' : 'name',
+			});
+			if (!response || response.disabled) return null;
+
+			const options = outlineOptions(response);
+			if (options.length === 0) {
+				options.push(keepOpenHint(deeper
+					? 'No deeper targets — delete the slash'
+					: 'No matches found — delete the last character'));
+			}
 			return { from: prefix.from, filter: false, options };
+		}
+
+		// ----- @@<note>/ : the headings and anchors inside a matching note -----
+		// Same "go one level deeper" idea, one level up: when the note is known
+		// but its headings are not. Falls through to the note search when the
+		// heading feature is switched off.
+		if (rest.endsWith('/') && rest.length > 1) {
+			const query = rest.slice(0, -1);
+			const response = await pluginContext.postMessage({
+				command: 'getHeadings',
+				query,
+				mode: 'inNote',
+			});
+			if (response && !response.disabled) {
+				const options = outlineOptions(response);
+				if (options.length === 0) options.push(keepOpenHint('No deeper targets — delete the slash'));
+				return { from: prefix.from, filter: false, options };
+			}
 		}
 
 		// ----- @@ : link to a note --------------------------------------------
