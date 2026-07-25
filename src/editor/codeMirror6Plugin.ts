@@ -136,11 +136,18 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 		// heading itself.
 		if (rest.startsWith('#')) {
 			const raw = rest.substring(1);
-			const deeper = raw.endsWith('/') && raw.length > 1;
-			const query = deeper ? raw.slice(0, -1) : raw;
+			// "@@#Chapter/Intro": everything before the first slash names the
+			// container heading, everything after narrows the entries under it.
+			// A slash at position 0 ("@@#/…") has no container, so it is not a
+			// deeper query — it falls through to a plain name match.
+			const slashIdx = raw.indexOf('/');
+			const deeper = slashIdx > 0;
+			const query = deeper ? raw.slice(0, slashIdx) : raw;
+			const innerQuery = deeper ? raw.slice(slashIdx + 1) : '';
 			const response = await pluginContext.postMessage({
 				command: 'getHeadings',
 				query,
+				innerQuery,
 				mode: deeper ? 'under' : 'name',
 			});
 			if (!response || response.disabled) return null;
@@ -148,7 +155,9 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 			const options = outlineOptions(response);
 			if (options.length === 0) {
 				options.push(keepOpenHint(deeper
-					? 'No deeper targets — delete the slash'
+					? (innerQuery
+						? 'No matching heading — delete the last character'
+						: 'No deeper targets — delete the slash')
 					: 'No matches found — delete the last character'));
 			}
 			return { from: prefix.from, filter: false, options };
@@ -158,16 +167,26 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 		// Same "go one level deeper" idea, one level up: when the note is known
 		// but its headings are not. Falls through to the note search when the
 		// heading feature is switched off.
-		if (rest.endsWith('/') && rest.length > 1) {
-			const query = rest.slice(0, -1);
+		const noteSlash = rest.indexOf('/');
+		if (noteSlash > 0) {
+			// "@@Plan/Migr": the note query is everything before the first slash,
+			// the heading filter everything after (empty right after the slash =
+			// list every heading in the note, as before).
+			const query = rest.slice(0, noteSlash);
+			const innerQuery = rest.slice(noteSlash + 1);
 			const response = await pluginContext.postMessage({
 				command: 'getHeadings',
 				query,
+				innerQuery,
 				mode: 'inNote',
 			});
 			if (response && !response.disabled) {
 				const options = outlineOptions(response);
-				if (options.length === 0) options.push(keepOpenHint('No deeper targets — delete the slash'));
+				if (options.length === 0) {
+					options.push(keepOpenHint(innerQuery
+						? 'No matching heading — delete the last character'
+						: 'No deeper targets — delete the slash'));
+				}
 				return { from: prefix.from, filter: false, options };
 			}
 		}

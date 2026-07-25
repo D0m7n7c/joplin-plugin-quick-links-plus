@@ -60,6 +60,20 @@ function matchTier(text: string, needle: string): number {
 	return 3;
 }
 
+// Locate `needle` inside `text` and score the match in one pass. `index` is
+// where the match starts (for snippet display), `tier` mirrors matchTier
+// (0 exact, 1 prefix, 2 contains, 3 none). An empty needle is "no filter":
+// index -1, tier 3 — callers treat that as "everything passes", not "no match".
+function locate(text: string, needle: string): { index: number; tier: number } {
+	if (needle === '') return { index: -1, tier: 3 };
+	const t = String(text || '').toLowerCase();
+	const index = t.indexOf(needle);
+	if (index < 0) return { index: -1, tier: 3 };
+	if (t === needle) return { index, tier: 0 };
+	if (index === 0) return { index, tier: 1 };
+	return { index, tier: 2 };
+}
+
 // Remove characters that have special meaning in Joplin's search syntax so a
 // half-typed query (e.g. an unbalanced quote or a stray "*") can never produce
 // a malformed query that throws.
@@ -150,8 +164,11 @@ interface OutlineItem {
 // are only ever reached deliberately and cannot flood a plain name search.
 type OutlineMode = 'name' | 'under' | 'inNote';
 
-function buildOutlineItems(notes: any[], query: string, curFolder: string, mode: OutlineMode = 'name'): OutlineItem[] {
+function buildOutlineItems(notes: any[], query: string, curFolder: string, mode: OutlineMode = 'name', innerQuery = ''): OutlineItem[] {
 	const needle = sanitizeSearch(query).toLowerCase();
+	// The heading text typed after the slash ("@@note/inner", "@@#head/inner").
+	// Only meaningful in the deeper modes; ignored in 'name'. Empty = show all.
+	const inner = sanitizeSearch(innerQuery).toLowerCase();
 	// Without a query there is nothing to go "into", so the deeper modes fall
 	// back to the plain listing rather than returning nothing.
 	const effectiveMode: OutlineMode = needle === '' ? 'name' : mode;
@@ -168,33 +185,39 @@ function buildOutlineItems(notes: any[], query: string, curFolder: string, mode:
 		const outline: OutlineEntry[] = parseOutline(note.body || '');
 
 		for (const entry of outline) {
-			// Match against the FULL text (searchText), so a long anchor is found by
-			// its beginning too, not only by the capped end that gets inserted.
-			const searchLower = entry.searchText.toLowerCase();
-			const matchIndex = needle !== '' ? searchLower.indexOf(needle) : -1;
+			// In 'name' mode the entry's own text is scored against the query; in
+			// the deeper modes the container has already qualified the entry (by
+			// note title or breadcrumb) and it is the inner filter — the text typed
+			// after the slash — that scores the entry's own text. Matching against
+			// the FULL searchText finds a long anchor by its beginning too, not only
+			// by the capped end that gets inserted.
+			const textNeedle = effectiveMode === 'name' ? needle : inner;
+			const { index: matchIndex, tier } = locate(entry.searchText, textNeedle);
 			const inText = matchIndex >= 0;
 			const inCrumb = needle !== '' && entry.breadcrumb.some(b => b.toLowerCase().includes(needle));
 
 			if (needle !== '') {
 				// A plain name search shows only entries that carry the query in
 				// their own text; ancestors and note titles no longer pull in
-				// unrelated targets. The deeper modes invert that deliberately.
+				// unrelated targets. The deeper modes invert that: the container
+				// qualifies the entry, and an optional inner filter narrows further.
 				if (effectiveMode === 'name' && !inText) continue;
 				if (effectiveMode === 'under' && !inCrumb) continue;
+				if (effectiveMode !== 'name' && inner !== '' && !inText) continue;
 			}
 
 			let rank: number;
-			if (needle === '') rank = 5;
-			else if (effectiveMode !== 'name') rank = 4;  // deeper modes: document order
-			else if (searchLower === needle) rank = 0;    // exact heading/anchor text
-			else if (matchIndex === 0) rank = 1;          // prefix
-			else rank = 2;                                // contains
+			if (needle === '') rank = 5;                              // recent listing
+			else if (effectiveMode !== 'name' && inner === '') rank = 4;  // deeper, unfiltered: document order
+			else if (tier === 0) rank = 0;                           // exact
+			else if (tier === 1) rank = 1;                           // prefix
+			else rank = 2;                                           // contains
 
-			// Display like a search snippet: the typed match is always visible, with
+			// Display like a search snippet: the scored match is always visible, with
 			// context and ellipses around it. Without a text match, the default
 			// (end-capped) label is shown. The INSERTED linkText stays the stable
 			// end-cap regardless of how the entry was found.
-			const displayText = inText ? matchWindow(entry.searchText, matchIndex, needle.length) : entry.text;
+			const displayText = inText ? matchWindow(entry.searchText, matchIndex, textNeedle.length) : entry.text;
 
 			ranked.push({
 				item: {
@@ -260,7 +283,7 @@ async function handleEditorMessage(message: any): Promise<any> {
 			const mode: OutlineMode =
 				message.mode === 'under' || message.mode === 'inNote' ? message.mode : 'name';
 			const notes = await notesForOutline(message.query || '');
-			return { items: buildOutlineItems(notes, message.query || '', curFolder, mode), showNotebook };
+			return { items: buildOutlineItems(notes, message.query || '', curFolder, mode, message.innerQuery || ''), showNotebook };
 		}
 
 		if (message.command === 'generateAnchor') {
