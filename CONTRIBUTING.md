@@ -28,6 +28,11 @@ These are deliberate limits, not gaps:
   regex, or saved filters.
 - **More hidden modes or settings on a hunch.** Every extra trigger or option
   makes the tool harder to discover and use.
+- **The slash goes exactly one level deep — never two.** `@@x/filter` means
+  "find the target inside x"; a second slash (`x/y/z`) would turn a link finder
+  into a hierarchy navigator — a search engine. One slash is the ceiling. The
+  inner filter after the slash is itself on probation: kept to see whether it
+  earns its place, not an invitation to extend it.
 
 ## A test for new ideas
 
