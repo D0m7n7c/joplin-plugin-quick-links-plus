@@ -74,6 +74,10 @@ function stripInlineMarkdown(text: string): string {
 }
 
 const LIST_MARKER_RE = /^\s*(?:[-*+]|\d+[.)])\s+/;
+// A GFM task checkbox directly after the list marker ("- [ ] ", "- [x] ").
+// Only stripped when it follows a list marker, so a literal "[ ]" in prose is
+// left alone.
+const TASK_CHECKBOX_RE = /^\[[ xX]\]\s+/;
 const QUOTE_PREFIX_RE = /^\s*>\s?/;
 const TABLE_ROW_RE = /^\s*\|/;
 const LABEL_MAX = 55;
@@ -109,7 +113,12 @@ function anchorLabelFor(line: string, anchorIndex: number, minStart = 0): string
 	} else {
 		segment = line.slice(minStart, anchorIndex).replace(QUOTE_PREFIX_RE, '');
 		const marker = LIST_MARKER_RE.exec(segment);
-		if (marker) segment = segment.slice(marker[0].length);
+		if (marker) {
+			segment = segment.slice(marker[0].length);
+			// Drop the task checkbox so "- [ ] Buy milk" labels as "Buy milk".
+			const checkbox = TASK_CHECKBOX_RE.exec(segment);
+			if (checkbox) segment = segment.slice(checkbox[0].length);
+		}
 	}
 
 	return stripInlineMarkdown(segment);

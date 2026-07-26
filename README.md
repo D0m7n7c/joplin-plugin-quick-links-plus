@@ -26,9 +26,17 @@ any heading or anchor directly from the rendered note.
 Both searches order their results by **notebook context** first — notes in or near
 the current note's notebook rank higher — before applying the ranking above.
 
+<<<<<<< HEAD
 A **trailing slash** lists what sits inside what you named: `@@<note title>/`
 shows that note's headings and anchors, `@@#<heading>/` shows the sub-headings
 and anchors nested under that heading. **Type after the slash to filter** inside, narrowing to the matching headings and anchors.
+=======
+A trailing slash lists what sits inside what you named: `@@<note title>/`
+shows that note's headings and anchors, `@@#<heading>/` shows the sub-headings
+and anchors nested under that heading. Type after the slash to filter inside —
+`@@<note title>/<text>` narrows to the matching headings and anchors. Both
+insert an anchor link.
+>>>>>>> 91d6ee4 (0.7.2: strip task checkbox from anchor labels in to-do items)
 
 Press **Tab** or **Enter** to accept the highlighted suggestion. Press
 **Shift+Enter** or **Shift+Tab** to accept it and also select the visible
