@@ -111,6 +111,26 @@ test('anchor: id and name attributes are both recognised', () => {
 });
 
 // --------------------------------------------------------------------------
+// Inline formatting is stripped from labels (via heading text)
+// --------------------------------------------------------------------------
+
+test('label: bold/italic/strikethrough/code markers are stripped', () => {
+	assert.equal(headings('## **Bold**')[0].text, 'Bold');
+	assert.equal(headings('## *Italic*')[0].text, 'Italic');
+	assert.equal(headings('## ~~Struck~~')[0].text, 'Struck');
+	assert.equal(headings('## `code`')[0].text, 'code');
+});
+
+test('label: == highlight markers are stripped', () => {
+	assert.equal(headings('## ==Mark==')[0].text, 'Mark');
+	assert.equal(headings('## ==A== and ==B==')[0].text, 'A and B');
+});
+
+test('label: a single "=" is preserved (not a highlight marker)', () => {
+	assert.equal(headings('## a = b')[0].text, 'a = b');
+});
+
+// --------------------------------------------------------------------------
 // slugify (+ Joplin-style duplicate handling via parseOutline)
 // --------------------------------------------------------------------------
 
