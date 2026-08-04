@@ -174,6 +174,10 @@ export function parseOutline(body: string): OutlineEntry[] {
 		if (heading) {
 			const level = heading[1].length;
 			const text = stripInlineMarkdown(heading[2]);
+			// An empty heading ("# " with no text) has no slug and nothing to
+			// show or link to. Skip it entirely — no entry and no place on the
+			// ancestor stack, so it never adds an empty breadcrumb to children.
+			if (!text) continue;
 			const anchor = slugger(text);
 
 			entries.push({

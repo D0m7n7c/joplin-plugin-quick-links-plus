@@ -5,7 +5,9 @@
     "dist": "webpack --env joplin-plugin-config=buildMain && webpack --env joplin-plugin-config=buildExtraScripts && webpack --env joplin-plugin-config=createArchive",
     "prepare": "npm run dist",
     "updateVersion": "webpack --env joplin-plugin-config=updateVersion",
-    "update": "npm install -g generator-joplin && yo joplin --node-package-manager npm --update --force"
+    "update": "npm install -g generator-joplin && yo joplin --node-package-manager npm --update --force",
+    "pretest": "tsc --outDir dist-test --module commonjs --target es2019 --moduleResolution node --skipLibCheck --esModuleInterop src/noteParser.ts test/noteParser.test.ts",
+    "test": "node --test dist-test/test/*.test.js"
   },
   "license": "MIT",
   "keywords": [
