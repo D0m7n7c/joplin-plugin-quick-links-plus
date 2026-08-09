@@ -121,6 +121,25 @@ test('label: bold/italic/strikethrough/code markers are stripped', () => {
 	assert.equal(headings('## `code`')[0].text, 'code');
 });
 
+test('label: underscore, triple and mixed emphasis markers are stripped', () => {
+	assert.equal(headings('## _italic_')[0].text, 'italic');
+	assert.equal(headings('## __bold__')[0].text, 'bold');
+	assert.equal(headings('## ***bold italic***')[0].text, 'bold italic');
+	assert.equal(headings('## ___bold italic___')[0].text, 'bold italic');
+	assert.equal(headings('## **_bold italic_**')[0].text, 'bold italic');
+	assert.equal(headings('## *__bold italic__*')[0].text, 'bold italic');
+});
+
+test('label: multiple emphasis spans on one line are all stripped', () => {
+	assert.equal(headings('## Here is **bold** and _italic_ text')[0].text,
+		'Here is bold and italic text');
+});
+
+test('label: emphasis is stripped from anchor labels too, not only headings', () => {
+	const body = '**bold text**<a id="x1"></a>';
+	assert.equal(anchors(body)[0].text, 'bold text');
+});
+
 test('label: == highlight markers are stripped', () => {
 	assert.equal(headings('## ==Mark==')[0].text, 'Mark');
 	assert.equal(headings('## ==A== and ==B==')[0].text, 'A and B');
