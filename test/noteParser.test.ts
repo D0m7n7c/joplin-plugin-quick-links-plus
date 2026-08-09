@@ -126,10 +126,12 @@ test('label: == highlight markers are stripped', () => {
 	assert.equal(headings('## ==A== and ==B==')[0].text, 'A and B');
 });
 
-test('label: footnote references [^x] are stripped', () => {
+test('label: footnote references [^x] and inline footnotes ^[x] are stripped', () => {
 	assert.equal(headings('## Title[^1]')[0].text, 'Title');
 	assert.equal(headings('## Title[^note]')[0].text, 'Title');
 	assert.equal(headings('## A[^1] and B[^2]')[0].text, 'A and B');
+	assert.equal(headings('## Title^[an inline note]')[0].text, 'Title');
+	assert.equal(headings('## Value 2^10')[0].text, 'Value 2^10');
 });
 
 test('label: ordinary square brackets and links are not mistaken for footnotes', () => {
