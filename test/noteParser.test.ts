@@ -126,6 +126,17 @@ test('label: == highlight markers are stripped', () => {
 	assert.equal(headings('## ==A== and ==B==')[0].text, 'A and B');
 });
 
+test('label: footnote references [^x] are stripped', () => {
+	assert.equal(headings('## Title[^1]')[0].text, 'Title');
+	assert.equal(headings('## Title[^note]')[0].text, 'Title');
+	assert.equal(headings('## A[^1] and B[^2]')[0].text, 'A and B');
+});
+
+test('label: ordinary square brackets and links are not mistaken for footnotes', () => {
+	assert.equal(headings('## See [Chapter]')[0].text, 'See [Chapter]');
+	assert.equal(headings('## [Link](:/abc)')[0].text, 'Link');
+});
+
 test('label: a single "=" is preserved (not a highlight marker)', () => {
 	assert.equal(headings('## a = b')[0].text, 'a = b');
 });
