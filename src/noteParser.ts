@@ -42,23 +42,32 @@ const ANCHOR_RE = /<a\b[^>]*?\b(?:id|name)\s*=\s*["']([^"']+)["'][^>]*>/gi;
 // and numbers are preserved.
 export function slugify(text: string): string {
 	return text
+		.normalize('NFKC')
 		.toLowerCase()
 		.trim()
-		.replace(/[^\p{L}\p{N}\s-]/gu, '')
+		.replace(/[^\p{L}\p{N}\p{M}\s_~-]/gu, '')
 		.replace(/\s+/g, '-')
-		.replace(/-+/g, '-')
-		.replace(/^-+|-+$/g, '');
+		.replace(/-+/g, '-');
 }
 
 // Reproduces Joplin's duplicate-slug handling: the first occurrence keeps the
 // plain slug, later identical slugs get "-1", "-2", ... appended.
 function makeUniqueSlugger(): (raw: string) => string {
-	const seen = new Map<string, number>();
+	// Mirrors Joplin (markdown-it-anchor with uniqueSlugStartIndex: 2): the first
+	// occurrence keeps the bare slug, later ones get "-2", "-3", … and the suffix
+	// is checked against every slug already handed out, so a literal "Foo-2"
+	// heading that collides with an auto-generated "foo-2" becomes "foo-2-2".
+	const used = new Set<string>();
 	return (raw: string): string => {
 		const base = slugify(raw);
-		const count = seen.get(base) ?? 0;
-		seen.set(base, count + 1);
-		return count === 0 ? base : `${base}-${count}`;
+		let slug = base;
+		let i = 2;
+		while (used.has(slug)) {
+			slug = `${base}-${i}`;
+			i++;
+		}
+		used.add(slug);
+		return slug;
 	};
 }
 

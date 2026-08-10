@@ -81,9 +81,7 @@ Install it via *Options -> Plugins -> Install from file*.
 
 ## Notes & limitations
 
-- Heading links rely on Joplin's slug algorithm. The slug generated here matches
-  Joplin for typical headings (letters, numbers, spaces, common punctuation);
-  very unusual characters may differ.
+- Heading links use the same slug algorithm as Joplin, so anchors match for letters, numbers, spaces, punctuation, accents and non-Latin scripts, including duplicate-heading numbering. The one deliberate exception is emoji (disabled by default in Joplin), which is not transliterated.
 - `@@#` searches note bodies via Joplin search, so only the most relevant notes
   are scanned for performance.
 

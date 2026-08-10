@@ -175,18 +175,28 @@ test('slugify: drops punctuation but keeps letters, numbers, hyphens', () => {
 	assert.equal(slugify('already-hyphenated'), 'already-hyphenated');
 });
 
-test('slugify: collapses repeated and edge hyphens', () => {
+test('slugify: collapses repeated internal hyphens, keeps edge hyphens (like Joplin)', () => {
 	assert.equal(slugify('a -- b'), 'a-b');
-	assert.equal(slugify('-edge-'), 'edge');
+	assert.equal(slugify('-edge-'), '-edge-');
 });
 
 test('slugify: keeps unicode letters', () => {
 	assert.equal(slugify('Über Grüße'), 'über-grüße');
 });
 
-test('duplicate headings get -1, -2 suffixes on the anchor (Joplin behaviour)', () => {
-	const body = '# Intro\n# Intro\n# Intro';
-	assert.deepEqual(headings(body).map(h => h.anchor), ['intro', 'intro-1', 'intro-2']);
+test('duplicate headings: suffixes start at -2, like Joplin', () => {
+	assert.deepEqual(headings('# Intro\n# Intro\n# Intro').map(h => h.anchor),
+		['intro', 'intro-2', 'intro-3']);
+});
+
+test('duplicate headings: a literal "-2" heading colliding with an auto slug becomes -2-2', () => {
+	assert.deepEqual(headings('# To-Do\n# To-Do\n# To-Do-2').map(h => h.anchor),
+		['to-do', 'to-do-2', 'to-do-2-2']);
+});
+
+test('duplicate headings: a literal "-2" heading between duplicates pushes the later one to -3', () => {
+	assert.deepEqual(headings('# To-Do\n# To-Do-2\n# To-Do').map(h => h.anchor),
+		['to-do', 'to-do-2', 'to-do-3']);
 });
 
 // --------------------------------------------------------------------------
