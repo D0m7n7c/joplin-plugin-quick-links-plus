@@ -1,8 +1,8 @@
 /*
  * Slug comparison harness (dev tool, not part of `npm test`).
  *
- * Compares our slugify() against Joplin's real slug function — uslug from
- * @joplin/fork-uslug, exactly what Joplin's renderer uses for heading anchors
+ * Compares the plugin's slugify() against Joplin's real slug function — uslug
+ * from @joplin/fork-uslug, exactly what Joplin's renderer uses for heading anchors
  * (uslug(text), no options). Run it to see every case, matches and mismatches:
  *
  *     npm run slug-compare
