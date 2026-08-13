@@ -189,6 +189,19 @@
 		var mark = makeMark(anchor.id, function () { return anchorLabel(anchor); });
 		if (anchor.nextSibling) anchor.parentNode.insertBefore(mark, anchor.nextSibling);
 		else anchor.parentNode.appendChild(mark);
+
+		// If real content still follows the anchor within its block, the mark
+		// sits mid-text, where the reserved inline gap would otherwise show
+		// nothing at rest. Make it persistently visible there. Anchors at the end
+		// of a line or block keep the default hover-only behaviour.
+		if (block) {
+			try {
+				var tail = document.createRange();
+				tail.setStartAfter(mark);
+				tail.setEnd(block, block.childNodes.length);
+				if (tail.toString().replace(/\s+/g, '') !== '') mark.classList.add('qlp-inflow');
+			} catch (e) { /* ignore */ }
+		}
 	}
 
 	function inject() {

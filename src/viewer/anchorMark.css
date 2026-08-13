@@ -23,6 +23,13 @@
 	transition: opacity 0.12s ease;
 }
 
+/* An anchor sitting mid-text (content follows it) reserves an inline gap either
+   way, so show the gray mark there permanently instead of leaving it empty.
+   Placed before the hover rules so hovering still darkens it to full color. */
+.qlp-mark.qlp-inflow {
+	opacity: 0.4;
+}
+
 .qlp-mark svg {
 	width: 0.85em;
 	height: 0.85em;
@@ -41,8 +48,13 @@
 	opacity: 1;
 }
 
-/* State right after a successful copy. */
-.qlp-mark.qlp-copied {
+/* State right after a successful copy. The mark stays fully visible and does not
+   react to hover until the timeout clears it. The host-hover rule above has a
+   higher specificity than a plain .qlp-copied selector, so the copied state is
+   repeated at matching specificity here to hold opacity at 1 in every hover
+   combination (pointer over the mark, over the block, or away). */
+.qlp-mark.qlp-copied,
+.qlp-host:hover .qlp-mark.qlp-copied {
 	opacity: 1;
 }
 
