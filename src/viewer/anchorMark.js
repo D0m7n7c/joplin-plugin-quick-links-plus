@@ -54,21 +54,28 @@
 		return document.getElementById('rendered-md') || document.body;
 	}
 
+	// Elements whose text must never end up in a copied label: the injected copy
+	// marks, and footnote references (the rendered "[1]" markers). The editor
+	// strips footnotes from its labels too, so excluding them here keeps the
+	// viewer and the editor popup in agreement.
+	var LABEL_EXCLUDE = '.qlp-mark, .footnote-ref';
+
+	// textContent of a node with the excluded elements removed first. Works on a
+	// clone so the visible DOM is untouched, and catches nested cases.
+	function cleanLabel(node) {
+		var clone = node.cloneNode(true);
+		clone.querySelectorAll(LABEL_EXCLUDE).forEach(function (m) { m.remove(); });
+		return (clone.textContent || '').replace(/\s+/g, ' ').trim();
+	}
+
 	// Heading text without the injected mark.
 	function headingLabel(heading) {
-		var text = '';
-		heading.childNodes.forEach(function (node) {
-			var isMark = node.nodeType === 1 && node.classList && node.classList.contains('qlp-mark');
-			if (!isMark) text += node.textContent;
-		});
-		return text.replace(/\s+/g, ' ').trim();
+		return cleanLabel(heading);
 	}
 
 	// Text content of a block, ignoring any injected marks.
 	function blockText(block) {
-		var clone = block.cloneNode(true);
-		clone.querySelectorAll('.qlp-mark').forEach(function (m) { m.remove(); });
-		return (clone.textContent || '').replace(/\s+/g, ' ').trim();
+		return cleanLabel(block);
 	}
 
 	// Text preceding an inline anchor on its visual line. To match the editor's
@@ -93,7 +100,13 @@
 				else range.setStart(block, 0);
 				range.setEndBefore(anchor);
 
-				var before = range.toString().replace(/\s+/g, ' ').trim();
+				// Read the range through a clone so footnote references and any
+				// injected marks inside it are dropped, matching headingLabel and
+				// the editor. range.toString() would keep the "[1]" text.
+				var holder = document.createElement('div');
+				holder.appendChild(range.cloneContents());
+				holder.querySelectorAll(LABEL_EXCLUDE).forEach(function (m) { m.remove(); });
+				var before = (holder.textContent || '').replace(/\s+/g, ' ').trim();
 				if (before) return before;
 			} catch (e) { /* ignore */ }
 			var whole = blockText(block);
@@ -162,6 +175,11 @@
 
 	function ensureAnchorMark(anchor) {
 		if (anchor.closest('h1,h2,h3,h4,h5,h6')) return; // heading already handled
+		// Footnote references (the "[1]" markers) and anything inside the
+		// generated footnotes section carry ids too, but they are navigation
+		// aids, not link targets — marking them just clutters the text with
+		// chain-link icons. Skip them.
+		if (anchor.closest('.footnote-ref, .footnotes')) return;
 		var next = anchor.nextElementSibling;
 		if (next && next.classList && next.classList.contains('qlp-mark')) return; // self-heal
 
