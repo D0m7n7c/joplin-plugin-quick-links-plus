@@ -190,15 +190,24 @@
 		if (anchor.nextSibling) anchor.parentNode.insertBefore(mark, anchor.nextSibling);
 		else anchor.parentNode.appendChild(mark);
 
-		// If real content still follows the anchor within its block, the mark
-		// sits mid-text, where the reserved inline gap would otherwise show
+		// If real content still follows the anchor on the same visual line, the
+		// mark sits mid-text, where the reserved inline gap would otherwise show
 		// nothing at rest. Make it persistently visible there. Anchors at the end
-		// of a line or block keep the default hover-only behaviour.
+		// of a line (content only after a following <br>) or block keep the
+		// default hover-only behaviour, like headings.
 		if (block) {
 			try {
 				var tail = document.createRange();
 				tail.setStartAfter(mark);
-				tail.setEnd(block, block.childNodes.length);
+				// Stop at the next <br> after the mark so only same-line content
+				// counts; content on a later line does not make this in-flow.
+				var endBr = null;
+				var brs = block.getElementsByTagName('br');
+				for (var i = 0; i < brs.length; i++) {
+					if (mark.compareDocumentPosition(brs[i]) & 4 /* FOLLOWING */) { endBr = brs[i]; break; }
+				}
+				if (endBr) tail.setEndBefore(endBr);
+				else tail.setEnd(block, block.childNodes.length);
 				if (tail.toString().replace(/\s+/g, '') !== '') mark.classList.add('qlp-inflow');
 			} catch (e) { /* ignore */ }
 		}
