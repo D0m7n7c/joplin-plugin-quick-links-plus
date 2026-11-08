@@ -54,17 +54,18 @@ area, then everything else. Within each tier, exact matches rank above prefix an
 contains matches. Context takes priority, so a match in a nearby notebook ranks
 above one further away.
 
-When `@@` is typed without any text, the most recently edited note is listed
-first, marked with a clock icon and separated from the context order below by a
-line. This makes a note you just created elsewhere easy to link straight away.
-How many notes are pinned this way is a setting; `0` turns it off.
+When `@@` is typed without a search term, the most recently edited note is
+shown first, marked with a clock icon. A divider separates it from the remaining
+notes, which follow in the notebook-based order described above. A newly created
+note can therefore be linked immediately, regardless of its notebook. The number
+of notes shown above the divider is configurable (see *Settings*).
 
 ## Settings
 
 Found under *Options -> Quick Links Plus*:
 
 - **Show notebook name** - shows the notebook next to note results (`@@`) and in the section header of heading/anchor results (`@@#`). On by default.
-- **Recently edited notes at the top of `@@`** - how many of the most recently edited notes are pinned above the context order when `@@` is typed without text (default 1). `0` keeps the context order only; the maximum lists every suggestion by recency.
+- **Recently edited notes at the top of `@@`** - number of most recently edited notes shown above the divider when `@@` is typed without a search term (default 1). `0` disables this and uses the notebook-based order only; the maximum value (`21`) sorts the entire list by last edit.
 - **Enable heading / anchor search (`@@#`)**.
 - **Enable anchor id generator (`@@id`)**.
 - **Show copy marks (link icon) in the viewer**.

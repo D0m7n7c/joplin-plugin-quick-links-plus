@@ -37,10 +37,10 @@
  *
  * Each option is a flex row that wraps: when label and path fit side by side
  * they stay on one line; otherwise the grey path moves onto its own second
- * line. A "↳" before the path marks it as belonging to the label above. The
- * empty CodeMirror icon column is hidden and label padding and path margin
- * share the same 1em, so the label text and the wrapped "↳" start at the same
- * x position. The path clamps its own width (min-width: 0 + calc) so its
+ * line. A "↰" before the path points up to where the entry lives: its parent
+ * headings, or the notebook of a note result. The empty CodeMirror icon column
+ * is hidden and label padding and path margin share the same 1em, so the label
+ * text and the wrapped "↰" start at the same x position. The path clamps its own width (min-width: 0 + calc) so its
  * ellipsis fires before the popup edge would clip it. */
 .quick-links-plus-completions .cm-completionIcon {
 	display: none;
@@ -69,7 +69,7 @@
 }
 
 .quick-links-plus-completions li[role="option"] .cm-completionDetail::before {
-	content: '\21B3'; /* ↳ */
+	content: '\21B0'; /* ↰ */
 	margin-right: 0.5em;
 	opacity: 0.6;
 }

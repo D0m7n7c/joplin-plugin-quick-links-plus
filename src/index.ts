@@ -398,7 +398,7 @@ async function registerSettings(): Promise<void> {
 			maximum: NOTE_RESULT_LIMIT,
 			step: 1,
 			label: 'Recently edited notes at the top of "@@"',
-			description: 'When "@@" is typed without text, this many of the most recently edited notes are listed first, marked with a clock icon, above the notebook-context order. 0 keeps the context order only; the maximum lists everything by recency.',
+			description: 'Number of most recently edited notes shown at the top, marked with a clock icon, when "@@" is typed without a search term. 0 disables this; the maximum value (21) sorts the entire list by last edit.',
 		},
 		[S_ENABLE_HEADINGS]: {
 			public: true,
