@@ -1,12 +1,12 @@
 {
   "name": "joplin-plugin-quick-links-plus",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "scripts": {
     "dist": "webpack --env joplin-plugin-config=buildMain && webpack --env joplin-plugin-config=buildExtraScripts && webpack --env joplin-plugin-config=createArchive",
     "prepare": "npm run dist",
     "updateVersion": "webpack --env joplin-plugin-config=updateVersion",
     "update": "npm install -g generator-joplin && yo joplin --node-package-manager npm --update --force",
-    "pretest": "tsc --outDir dist-test --module commonjs --target es2019 --moduleResolution node --skipLibCheck --esModuleInterop src/noteParser.ts test/noteParser.test.ts",
+    "pretest": "tsc -p tsconfig.test.json",
     "test": "node --test dist-test/test/*.test.js",
     "slug-compare": "npm run pretest && node test/slug-compare.js"
   },

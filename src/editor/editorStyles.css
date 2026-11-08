@@ -73,3 +73,40 @@
 	margin-right: 0.5em;
 	opacity: 0.6;
 }
+
+/* Recently edited notes pinned at the top of "@@".
+ *
+ * A pinned note shows a clock icon in the 1em left gutter that the label
+ * padding fills on every other row: 0.8em icon + 0.2em label padding = 1em, so
+ * all titles stay in one column. The icon is a mask over currentColor, so it
+ * follows the theme and the selected-row colour. A plain divider line (the
+ * header of the section holding the remaining notes) separates the pinned
+ * notes from the notebook-context order below. */
+.quick-links-plus-completions li[role="option"] .cm-completionIcon.cm-completionIcon-qlp-recent {
+	display: inline-block;
+	flex-shrink: 0;
+	position: relative;
+	top: 0.12em;
+	width: 0.8em;
+	height: 0.8em;
+	padding: 0;
+	font-size: inherit;
+	box-sizing: border-box;
+	opacity: 0.6;
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 12A8.5 8.5 0 1 0 5.99 5.99'/%3E%3Cpath d='M5.99 1.9V5.99H10.1'/%3E%3Cpath d='M12 7.5V12l3.2 2'/%3E%3C/svg%3E") no-repeat center / contain;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 12A8.5 8.5 0 1 0 5.99 5.99'/%3E%3Cpath d='M5.99 1.9V5.99H10.1'/%3E%3Cpath d='M12 7.5V12l3.2 2'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+.quick-links-plus-completions li[role="option"] .cm-completionIcon-qlp-recent + .cm-completionLabel {
+	padding-left: 0.2em;
+}
+
+.quick-links-plus-completions .qlp-recent-divider {
+	display: list-item;
+	list-style: none;
+	height: 0;
+	margin: 3px 0;
+	padding: 0;
+	border-top: 1px solid rgba(127, 127, 127, 0.25);
+}

@@ -16,6 +16,7 @@ import { ContentScriptType, SettingItemType } from 'api/types';
 import { parseOutline, matchWindow, OutlineEntry } from './noteParser';
 import { generateUniqueAnchorId, buildAnchorHtml } from './anchorId';
 import { ParentMap, contextRing } from './notebookTree';
+import { pinRecent } from './noteOrder';
 
 const SECTION = 'quickLinksPlus';
 const EDITOR_CONTENT_SCRIPT_ID = 'quickLinksPlusEditor';
@@ -27,6 +28,7 @@ const S_ENABLE_HEADINGS = 'enableHeadingSearch';
 const S_ENABLE_ANCHOR_GEN = 'enableAnchorGenerator';
 const S_ENABLE_COPY_MARKS = 'enableCopyMarks';
 const S_COPIED_DURATION = 'copiedDurationMs';
+const S_RECENT_PINNED = 'recentPinnedCount';
 
 const NOTE_RESULT_LIMIT = 21;
 const OUTLINE_NOTE_LIMIT = 30;
@@ -272,7 +274,16 @@ async function handleEditorMessage(message: any): Promise<any> {
 					|| a.i - b.i)
 				.map((x: any) => x.n);
 
-			const result = sorted.map((n: any) => ({ id: n.id, title: n.title, folder: folderCache[n.parent_id] }));
+			// Without a query, the most recently edited notes can be pinned above
+			// the context order (setting; 0 = off). Once text is typed, title
+			// relevance decides and nothing is pinned.
+			const pinCount = q === '' ? await setting<number>(S_RECENT_PINNED) : 0;
+			const result = pinRecent(sorted, pinCount).map(({ note: n, recent }) => ({
+				id: n.id,
+				title: n.title,
+				folder: folderCache[n.parent_id],
+				recent,
+			}));
 			return { notes: result, showNotebook };
 		}
 
@@ -377,6 +388,17 @@ async function registerSettings(): Promise<void> {
 			value: true,
 			label: 'Show notebook name',
 			description: 'Show the notebook next to note results (@@) and in the note header of heading / anchor results (@@#).',
+		},
+		[S_RECENT_PINNED]: {
+			public: true,
+			section: SECTION,
+			type: SettingItemType.Int,
+			value: 1,
+			minimum: 0,
+			maximum: NOTE_RESULT_LIMIT,
+			step: 1,
+			label: 'Recently edited notes at the top of "@@"',
+			description: 'When "@@" is typed without text, this many of the most recently edited notes are listed first, marked with a clock icon, above the notebook-context order. 0 keeps the context order only; the maximum lists everything by recency.',
 		},
 		[S_ENABLE_HEADINGS]: {
 			public: true,

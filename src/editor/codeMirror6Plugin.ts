@@ -193,8 +193,26 @@ export default function codeMirror6Plugin(pluginContext: PluginContext, CodeMirr
 
 		// ----- @@ : link to a note --------------------------------------------
 		const response = await pluginContext.postMessage({ command: 'getNotes', query: rest });
-		const options: Completion[] = (response.notes || []).map((note: any) => ({
+		const notes: any[] = response.notes || [];
+		// Pinned recent notes carry no section, so CodeMirror lists them first;
+		// the remaining notes share one section whose header is only a divider
+		// line. Without pinned notes there is no section and no divider.
+		const hasRecent = notes.some(n => n.recent);
+		const contextSection = hasRecent ? {
+			name: 'qlp-context',
+			header: () => {
+				const el = document.createElement('div');
+				el.className = 'qlp-recent-divider';
+				el.setAttribute('aria-hidden', 'true');
+				return el;
+			},
+		} : undefined;
+		const options: Completion[] = notes.map((note: any) => ({
 			label: note.title,
+			// The type adds "cm-completionIcon-qlp-recent" to CodeMirror's icon
+			// element, which the stylesheet turns into a clock icon.
+			type: note.recent ? 'qlp-recent' : undefined,
+			section: note.recent ? undefined : contextSection,
 			detail: response.showNotebook ? `In ${note.folder ?? 'unknown'}` : undefined,
 			apply: (view: EditorView, _c: Completion, from: number, to: number) => {
 				const link = `[${note.title}](:/${note.id})`;
